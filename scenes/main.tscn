@@ -1,0 +1,61 @@
+[gd_scene format=3 uid="uid://b60oc0g56mshh"]
+
+[ext_resource type="Script" uid="uid://b4c2xk886bcif" path="res://scripts/batch_camera_manager.gd" id="1_3k1xq"]
+[ext_resource type="PackedScene" path="res://scenes/debug_ui.tscn" id="2_debug"]
+
+[sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_o5qli"]
+
+[sub_resource type="Sky" id="Sky_0wfyh"]
+sky_material = SubResource("PhysicalSkyMaterial_o5qli")
+
+[sub_resource type="Environment" id="Environment_sugp2"]
+background_mode = 2
+sky = SubResource("Sky_0wfyh")
+
+[sub_resource type="SphereMesh" id="SphereMesh_o5qli"]
+
+[node name="Main" type="Node3D" unique_id=208358895]
+
+[node name="CameraManager" type="Node3D" parent="." unique_id=2091765577 node_paths=PackedStringArray("root", "target_transform")]
+script = ExtResource("1_3k1xq")
+root = NodePath("../CameraRoot")
+target_transform = NodePath("../TargetObject")
+
+[node name="CameraRoot" type="Node3D" parent="." unique_id=104537887]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0559022e-10, -3.0559022e-10, 10.1838)
+
+[node name="TargetObject" type="Node3D" parent="." unique_id=437183652]
+
+[node name="TestContent" type="Node3D" parent="." unique_id=1186046523]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="TestContent" unique_id=1263917950]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
+light_energy = 5.0
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="TestContent" unique_id=529881438]
+environment = SubResource("Environment_sugp2")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="TestContent" unique_id=1437115022]
+mesh = SubResource("SphereMesh_o5qli")
+
+[node name="UI" type="Control" parent="." unique_id=446789806]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="UI" unique_id=694222304]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -50.0
+offset_right = 300.0
+offset_bottom = -10.0
+grow_vertical = 0
+text = "CubeVi Swizzle - Godot"
+
+[node name="DebugUI" parent="." unique_id=240211608 instance=ExtResource("2_debug")]
