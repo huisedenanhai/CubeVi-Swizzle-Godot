@@ -61,7 +61,7 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	
 	var device: DeviceData = manager.get_device()
 	if device != null:
-		var aspect: float = device.output_size_Y / device.output_size_X
+		var aspect: float = device.output_size_X / device.output_size_Y
 		_draw_focal_plane(gizmo, focal_pos, cam_right, cam_up, focal_plane, aspect, device.theta)
 	
 	# Draw line from root center to focal plane center
@@ -170,7 +170,7 @@ func _draw_focal_plane(
 	fov: float
 ) -> void:
 	var focal_width: float = focal_plane * tan(deg_to_rad(fov / 2.0)) * 2.0
-	var focal_height: float = focal_width * aspect
+	var focal_height: float = focal_width / aspect
 	
 	var fp_tl: Vector3 = focal_pos - cam_right * focal_width / 2.0 + cam_up * focal_height / 2.0
 	var fp_tr: Vector3 = focal_pos + cam_right * focal_width / 2.0 + cam_up * focal_height / 2.0
