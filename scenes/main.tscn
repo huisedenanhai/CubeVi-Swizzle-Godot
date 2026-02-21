@@ -31,7 +31,6 @@ focal_plane = 10.0
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="TestContent" unique_id=1263917950]
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
 light_energy = 5.0
-shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="TestContent" unique_id=529881438]
 environment = SubResource("Environment_sugp2")
