@@ -143,10 +143,6 @@ func _setup_display():
 
 
 func _init_cameras():
-	var camera_grid := Node3D.new()
-	camera_grid.name = "CameraGrid"
-	add_child(camera_grid)
-	
 	for i in range(_device.viewnum):
 		var viewport := SubViewport.new()
 		viewport.name = "Viewport_%d" % i

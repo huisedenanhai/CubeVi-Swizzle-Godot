@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b4c2xk886bcif" path="res://scripts/batch_camera_manager.gd" id="1_3k1xq"]
 [ext_resource type="PackedScene" path="res://scenes/debug_ui.tscn" id="2_debug"]
+[ext_resource type="Script" uid="uid://dqtjqmrpiowqq" path="res://scripts/spin.gd" id="2_sugp2"]
 
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_o5qli"]
 
@@ -12,7 +13,7 @@ sky_material = SubResource("PhysicalSkyMaterial_o5qli")
 background_mode = 2
 sky = SubResource("Sky_0wfyh")
 
-[sub_resource type="SphereMesh" id="SphereMesh_o5qli"]
+[sub_resource type="BoxMesh" id="BoxMesh_0wfyh"]
 
 [node name="Main" type="Node3D" unique_id=208358895]
 
@@ -35,7 +36,8 @@ shadow_enabled = true
 environment = SubResource("Environment_sugp2")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="TestContent" unique_id=1437115022]
-mesh = SubResource("SphereMesh_o5qli")
+mesh = SubResource("BoxMesh_0wfyh")
+script = ExtResource("2_sugp2")
 
 [node name="UI" type="Control" parent="." unique_id=446789806]
 layout_mode = 3
