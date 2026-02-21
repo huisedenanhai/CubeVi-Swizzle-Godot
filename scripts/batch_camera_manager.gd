@@ -65,7 +65,6 @@ func _ready():
 		return
 	
 	# Initialize components
-	_init_cameras()
 	_init_atlas()  # New: Create atlas texture
 	_init_display_camera()
 	_init_quad()
@@ -142,23 +141,22 @@ func _setup_display():
 	DisplayServer.window_set_size(Vector2i(int(_device.output_size_X), int(_device.output_size_Y)), 0)
 
 
-func _init_cameras():
-	for i in range(_device.viewnum):
-		var viewport := SubViewport.new()
-		viewport.name = "Viewport_%d" % i
-		viewport.size = Vector2i(_device.subimg_width, _device.subimg_height)
-		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-		add_child(viewport)
-		_camera_viewports.append(viewport)
-		
-		var camera := Camera3D.new()
-		camera.name = "BatchCamera_%d" % i
-		camera.projection = Camera3D.PROJECTION_FRUSTUM
-		camera.size = 2.0 * CAMERA_NEAR * tan(deg_to_rad(_device.theta / 2.0))
-		camera.near = CAMERA_NEAR
-		camera.far = CAMERA_FAR
-		viewport.add_child(camera)
-		_batch_cameras.append(camera)
+func _init_camera(i: int, container: SubViewportContainer):
+	var viewport := SubViewport.new()
+	viewport.name = "Viewport_%d" % i
+	viewport.size = Vector2i(_device.subimg_width, _device.subimg_height)
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	container.add_child(viewport)
+	_camera_viewports.append(viewport)
+	
+	var camera := Camera3D.new()
+	camera.name = "BatchCamera_%d" % i
+	camera.projection = Camera3D.PROJECTION_FRUSTUM
+	camera.size = 2.0 * CAMERA_NEAR * tan(deg_to_rad(_device.theta / 2.0))
+	camera.near = CAMERA_NEAR
+	camera.far = CAMERA_FAR
+	viewport.add_child(camera)
+	_batch_cameras.append(camera)
 
 
 func _init_atlas():
@@ -178,23 +176,23 @@ func _init_atlas():
 	var canvas_layer := CanvasLayer.new()
 	_atlas_viewport.add_child(canvas_layer)
 	
-	# Create TextureRect for each camera viewport in the atlas
+	# Create SubViewportContainer for each camera viewport in the atlas
 	for i in range(_device.viewnum):
 		var n_i: int = i
 		var m: int = _device.imgs_count_y - int(float(n_i) / float(_device.imgs_count_x)) - 1
 		var n: int = n_i % _device.imgs_count_x
 		
-		var tex_rect := TextureRect.new()
-		tex_rect.name = "AtlasCell_%d" % i
-		tex_rect.texture = _camera_viewports[i].get_texture()
-		tex_rect.size = Vector2(_device.subimg_width, _device.subimg_height)
-		tex_rect.position = Vector2(
+		var viewport_container := SubViewportContainer.new()
+		viewport_container.name = "AtlasCell_%d" % i
+		viewport_container.stretch = true
+		viewport_container.size = Vector2(_device.subimg_width, _device.subimg_height)
+		viewport_container.position = Vector2(
 			n * _device.subimg_width,
 			m * _device.subimg_height
 		)
-		tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
-		canvas_layer.add_child(tex_rect)
-	
+		canvas_layer.add_child(viewport_container)
+		_init_camera(i, viewport_container)
+		
 	# Get atlas texture
 	_atlas_texture = _atlas_viewport.get_texture()
 
