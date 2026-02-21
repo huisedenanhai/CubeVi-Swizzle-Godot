@@ -337,9 +337,9 @@ func get_camera_frustum_params() -> Array[Dictionary]:
 
 
 ## Debug API
-func set_debug_show_atlas(show: bool) -> void:
+func set_debug_show_atlas(yes: bool) -> void:
 	if _quad_material != null:
-		_quad_material.set_shader_parameter("_ShowAtlas", show)
+		_quad_material.set_shader_parameter("_ShowAtlas", yes)
 
 func get_debug_info() -> Dictionary:
 	return {
