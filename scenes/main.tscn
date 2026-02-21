@@ -16,13 +16,11 @@ sky = SubResource("Sky_0wfyh")
 
 [node name="Main" type="Node3D" unique_id=208358895]
 
-[node name="CameraManager" type="Node3D" parent="." unique_id=2091765577 node_paths=PackedStringArray("root", "target_transform")]
+[node name="CameraManager" type="Node3D" parent="." unique_id=2091765577 node_paths=PackedStringArray("target_transform")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0559022e-10, -3.0559022e-10, 10)
 script = ExtResource("1_3k1xq")
-root = NodePath("../CameraRoot")
 target_transform = NodePath("../TargetObject")
-
-[node name="CameraRoot" type="Node3D" parent="." unique_id=104537887]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0559022e-10, -3.0559022e-10, 10.1838)
+focal_plane = 10.0
 
 [node name="TargetObject" type="Node3D" parent="." unique_id=437183652]
 

@@ -29,63 +29,53 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	if not is_instance_valid(manager):
 		return
 	
-	if manager.root == null:
+	if manager.target_transform == null:
 		return
 	
-	var root: Node3D = manager.root
 	var target_transform: Node3D = manager.target_transform
 	var focal_plane: float = manager.focal_plane
 	
-	# Get camera array orientation
-	var cam_forward: Vector3 = -root.basis.z
-	var cam_right: Vector3 = root.basis.x
-	var cam_up: Vector3 = root.basis.y
+	# Get camera array orientation from the manager
+	var cam_right: Vector3 = manager.basis.x
+	var cam_up: Vector3 = manager.basis.y
+	var cam_forward: Vector3 = -manager.basis.z
 	
-	# Calculate view direction
-	var view_dir: Vector3
-	if target_transform != null:
-		view_dir = (target_transform.position - root.position).normalized()
-	else:
-		view_dir = cam_forward
+	# Transform target to local space for focal plane calculation
+	var target_local: Vector3 = manager.to_local(target_transform.position)
+	var focal_pos_local := Vector3(target_local.x, target_local.y, -focal_plane)
 	
 	# Draw all camera frustums using manager parameters
-	var all_frustum_lines := _build_frustums_from_params(manager, cam_right, cam_up, view_dir)
+	var all_frustum_lines := _build_frustums_from_params(manager, cam_right, cam_up, manager.basis)
 	gizmo.add_lines(all_frustum_lines, get_material("frustum", gizmo), false)
 	
 	# Draw focal plane
-	var focal_pos: Vector3
-	if target_transform != null:
-		focal_pos = target_transform.position
-	else:
-		focal_pos = root.position + cam_forward * focal_plane
-	
 	var device: DeviceData = manager.get_device()
 	if device != null:
 		var aspect: float = device.output_size_X / device.output_size_Y
-		_draw_focal_plane(gizmo, focal_pos, cam_right, cam_up, focal_plane, aspect, device.theta)
+		_draw_focal_plane_local(gizmo, focal_pos_local, focal_plane, aspect, device.theta, manager.basis)
 	
-	# Draw line from root center to focal plane center
+	# Draw line from manager center to focal plane center
 	var center_line := PackedVector3Array()
-	center_line.push_back(root.position)
-	center_line.push_back(focal_pos)
+	center_line.push_back(Vector3.ZERO)
+	center_line.push_back(focal_pos_local)
 	gizmo.add_lines(center_line, get_material("focal_plane", gizmo), false)
 	
-	# Draw target point marker if using target
-	if target_transform != null:
-		_draw_target_marker(gizmo, target_transform.position)
+	# Draw target point marker in local space
+	_draw_target_marker(gizmo, target_local)
 
 
 func _build_frustums_from_params(
 	manager: BatchCameraManager,
 	cam_right: Vector3,
 	cam_up: Vector3,
-	view_dir: Vector3
+	cam_basis: Basis
 ) -> PackedVector3Array:
 	var all_lines := PackedVector3Array()
 	var params: Array[Dictionary] = manager.get_camera_frustum_params()
+	var cam_forward: Vector3 = -cam_basis.z
 	
 	for cam_data in params:
-		var frustum_lines := _build_single_frustum(cam_data, cam_right, cam_up, view_dir)
+		var frustum_lines := _build_single_frustum(cam_data, cam_right, cam_up, cam_forward)
 		all_lines.append_array(frustum_lines)
 	
 	return all_lines
@@ -176,6 +166,34 @@ func _draw_focal_plane(
 	var fp_tr: Vector3 = focal_pos + cam_right * focal_width / 2.0 + cam_up * focal_height / 2.0
 	var fp_bl: Vector3 = focal_pos - cam_right * focal_width / 2.0 - cam_up * focal_height / 2.0
 	var fp_br: Vector3 = focal_pos + cam_right * focal_width / 2.0 - cam_up * focal_height / 2.0
+	
+	var lines := PackedVector3Array()
+	lines.push_back(fp_tl); lines.push_back(fp_tr)
+	lines.push_back(fp_tr); lines.push_back(fp_br)
+	lines.push_back(fp_br); lines.push_back(fp_bl)
+	lines.push_back(fp_bl); lines.push_back(fp_tl)
+	
+	gizmo.add_lines(lines, get_material("focal_plane", gizmo), false)
+
+
+func _draw_focal_plane_local(
+	gizmo: EditorNode3DGizmo,
+	focal_pos_local: Vector3,
+	focal_plane: float,
+	aspect: float,
+	fov: float,
+	cam_basis: Basis
+) -> void:
+	var focal_width: float = focal_plane * tan(deg_to_rad(fov / 2.0)) * 2.0
+	var focal_height: float = focal_width / aspect
+	
+	var cam_right: Vector3 = cam_basis.x
+	var cam_up: Vector3 = cam_basis.y
+	
+	var fp_tl: Vector3 = focal_pos_local - cam_right * focal_width / 2.0 + cam_up * focal_height / 2.0
+	var fp_tr: Vector3 = focal_pos_local + cam_right * focal_width / 2.0 + cam_up * focal_height / 2.0
+	var fp_bl: Vector3 = focal_pos_local - cam_right * focal_width / 2.0 - cam_up * focal_height / 2.0
+	var fp_br: Vector3 = focal_pos_local + cam_right * focal_width / 2.0 - cam_up * focal_height / 2.0
 	
 	var lines := PackedVector3Array()
 	lines.push_back(fp_tl); lines.push_back(fp_tr)

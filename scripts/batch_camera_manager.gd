@@ -7,12 +7,15 @@ extends Node3D
 ## Uses single atlas texture for efficient shader sampling
 
 @export_group("Camera Settings")
-@export var root: Node3D
 @export var target_transform: Node3D
 
 @export_group("Focal Settings")
-@export_range(0.1, 500.0) var focal_plane: float = 10.0
-@export var use_target_focal: bool = true
+@export_range(0.1, 500.0) var focal_plane: float:
+	get:
+		return _focal_plane
+
+var _focal_plane: float = 10.0
+var _target_offset: Vector2 = Vector2.ZERO
 
 var device_defaults = preload("res://autoload/device_defaults.gd")
 
@@ -30,9 +33,6 @@ var _camera_viewports: Array[SubViewport] = []
 # Atlas texture - combines all 40 views into one texture
 var _atlas_viewport: SubViewport
 var _atlas_texture: ViewportTexture
-
-# Target object
-var _target: Node3D
 
 # Display
 var _quad_object: MeshInstance3D
@@ -59,13 +59,12 @@ func _ready():
 	_setup_display()
 	
 	# Validate required references
-	if root == null or target_transform == null:
-		SwizzleLogger.log_error("Root or TargetTransform is not assigned.")
+	if target_transform == null:
+		SwizzleLogger.log_error("TargetTransform is not assigned.")
 		set_process(false)
 		return
 	
 	# Initialize components
-	_init_target()
 	_init_cameras()
 	_init_atlas()  # New: Create atlas texture
 	_init_display_camera()
@@ -75,29 +74,24 @@ func _ready():
 
 
 func _process(_delta):
+	_update_target()
 	if Engine.is_editor_hint():
 		# In editor, just update gizmo when transforms change
 		_update_gizmo_if_needed()
 		return
 	
-	_update_target()
 	_update_camera_positions()
-	_update_atlas()  # Update atlas texture each frame
 
 
 var _last_root_transform: Transform3D
 var _last_target_pos: Vector3
-var _gizmo_dirty: bool = true
 
 func _update_gizmo_if_needed() -> void:
-	if root == null:
-		return
-	
 	var needs_update := false
 	
-	# Check if root transform changed
-	if root.transform != _last_root_transform:
-		_last_root_transform = root.transform
+	# Check if self transform changed
+	if transform != _last_root_transform:
+		_last_root_transform = transform
 		needs_update = true
 	
 	# Check if target position changed
@@ -108,7 +102,7 @@ func _update_gizmo_if_needed() -> void:
 	
 	if needs_update:
 		# Trigger property change notification to update gizmo
-		notify_property_list_changed()
+		update_gizmos()
 
 
 func _init_device_data():
@@ -146,12 +140,6 @@ func _setup_display():
 	
 	# Set window size to output resolution
 	DisplayServer.window_set_size(Vector2i(int(_device.output_size_X), int(_device.output_size_Y)), 0)
-
-
-func _init_target():
-	_target = Node3D.new()
-	_target.name = "Target"
-	add_child(_target)
 
 
 func _init_cameras():
@@ -215,11 +203,6 @@ func _init_atlas():
 	_atlas_texture = _atlas_viewport.get_texture()
 
 
-func _update_atlas():
-	## Atlas viewport updates automatically with UPDATE_ALWAYS
-	pass
-
-
 func _init_display_camera():
 	_display_camera = Camera3D.new()
 	_display_camera.name = "DisplayCamera"
@@ -271,53 +254,46 @@ func _init_quad():
 
 
 func _update_target():
-	if use_target_focal and target_transform != null:
-		_target.position = target_transform.position
-		focal_plane = root.position.distance_to(_target.position)
-	else:
-		_target.position = root.position + root.basis.z * focal_plane
+	if target_transform != null:
+		var target_local: Vector3 = to_local(target_transform.position)
+		_focal_plane = abs(target_local.z)
+		_target_offset = Vector2(target_local.x, target_local.y)
 
 
 ## Camera parameter calculation functions
 
 func _get_spread_direction() -> Vector3:
-	## Returns the perpendicular direction for camera spread (X axis in camera array)
-	var up_dir := root.basis.y
-	var cur_cam_dir := (target_transform.position - root.position).normalized() if target_transform else root.basis.z
-	return cur_cam_dir.cross(up_dir).normalized()
+	## Returns local X direction for camera spread (relative to CameraManager)
+	return Vector3.RIGHT
 
 
 func _get_camera_offset_x(camera_index: int, x_fov: float) -> float:
-	## Calculate camera offset distance from root along spread direction
+	## Calculate camera offset distance from center along local X
 	var n_i: int = (camera_index + _device.viewnum * 10) % _device.viewnum
 	return -(-x_fov + (n_i * 2.0 * x_fov) / (_device.viewnum - 1))
 
 
-func _get_frustum_offset_meters(camera_offset_x: float, near: float) -> float:
+func _get_frustum_offset_meters(camera_offset_x: float, near: float) -> Vector2:
 	## Calculate frustum offset in meters at near plane given camera offset
-	return camera_offset_x * (near / focal_plane)
+	return (Vector2(-camera_offset_x, 0) + _target_offset) * (near / _focal_plane)
 
 
 func _update_camera_positions():
-	var x_fov := focal_plane * tan(deg_to_rad(_device.theta / 2.0))
+	var x_fov: float = _focal_plane * tan(deg_to_rad(_device.theta / 2.0))
 	var near: float = CAMERA_NEAR
 	var far: float = CAMERA_FAR
 	var frustum_size: float = 2.0 * near * tan(deg_to_rad(_device.theta / 2.0))
-	var x_positive_dir := _get_spread_direction()
-	
+
 	for i in range(_device.viewnum):
 		var x_i: float = _get_camera_offset_x(i, x_fov)
+		var local_pos := Vector3(x_i, 0, 0)
+		var world_pos := to_global(local_pos)
 		
-		_batch_cameras[i].position = root.position + x_positive_dir * x_i
+		_batch_cameras[i].position = world_pos
 		
-		var offset_meters: float = _get_frustum_offset_meters(x_i, near)
-		_batch_cameras[i].set_frustum(frustum_size, Vector2(-offset_meters, 0), near, far)
-		_batch_cameras[i].rotation = root.rotation
-
-
-## Public API for runtime control
-func set_focal_plane(distance: float) -> void:
-	focal_plane = clamp(distance, CAMERA_NEAR, 500.0)
+		var offset_meters: Vector2 = _get_frustum_offset_meters(x_i, near)
+		_batch_cameras[i].set_frustum(frustum_size, offset_meters, near, far)
+		_batch_cameras[i].rotation = rotation
 
 
 ## Getters for editor gizmos
@@ -330,32 +306,31 @@ func get_batch_cameras() -> Array[Camera3D]:
 
 
 func get_camera_frustum_params() -> Array[Dictionary]:
-	## Returns array of frustum parameters for each camera
+	## Returns array of frustum parameters for each camera (in local space)
 	## Each dict contains: position, offset, near, far, size
 	var params: Array[Dictionary] = []
 	
-	if _device == null or root == null:
+	if _device == null:
 		return params
 	
-	var x_fov: float = focal_plane * tan(deg_to_rad(_device.theta / 2.0))
+	var x_fov: float = _focal_plane * tan(deg_to_rad(_device.theta / 2.0))
 	var near: float = CAMERA_NEAR
 	var far: float = CAMERA_FAR
 	var frustum_size: float = 2.0 * near * tan(deg_to_rad(_device.theta / 2.0))
-	var x_positive_dir := _get_spread_direction()
-	
+
 	for i in range(_device.viewnum):
 		var x_i: float = _get_camera_offset_x(i, x_fov)
-		var offset_meters: float = _get_frustum_offset_meters(x_i, near)
-		var cam_pos: Vector3 = root.position + x_positive_dir * x_i
-		
+		var offset_meters: Vector2 = _get_frustum_offset_meters(x_i, near)
+		var cam_pos: Vector3 = Vector3(x_i, 0, 0)
+
 		params.append({
 			"position": cam_pos,
-			"rotation": root.rotation,
-			"offset": Vector2(-offset_meters, 0),
+			"rotation": Vector3.ZERO,
+			"offset": offset_meters,
 			"size": frustum_size,
 			"near": near,
 			"far": far,
-			"focal_plane": focal_plane
+			"focal_plane": _focal_plane
 		})
 	
 	return params
@@ -369,7 +344,7 @@ func set_debug_show_atlas(show: bool) -> void:
 func get_debug_info() -> Dictionary:
 	return {
 		"camera_count": _device.viewnum if _device != null else 0,
-		"focal_plane": focal_plane,
+		"focal_plane": _focal_plane,
 		"grid_size": "%dx%d" % [_device.imgs_count_x, _device.imgs_count_y] if _device != null else "0x0",
 		"atlas_size": "%dx%d" % [_atlas_viewport.size.x, _atlas_viewport.size.y] if _atlas_viewport != null else "0x0"
 	}
