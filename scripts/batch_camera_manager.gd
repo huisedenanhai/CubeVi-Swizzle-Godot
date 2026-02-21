@@ -9,6 +9,9 @@ extends Node3D
 @export_group("Camera Settings")
 @export var target_transform: Node3D
 
+@export_group("Display Layer")
+@export_range(1, 20) var display_layer: int = 2
+
 @export_group("Focal Settings")
 @export_range(0.1, 500.0) var focal_plane: float:
 	get:
@@ -155,6 +158,7 @@ func _init_camera(i: int, container: SubViewportContainer):
 	camera.size = 2.0 * CAMERA_NEAR * tan(deg_to_rad(_device.theta / 2.0))
 	camera.near = CAMERA_NEAR
 	camera.far = CAMERA_FAR
+	camera.cull_mask = 0xFFFFFFFF ^ (1 << (display_layer - 1))  # Exclude display layer
 	viewport.add_child(camera)
 	_batch_cameras.append(camera)
 
@@ -205,7 +209,7 @@ func _init_display_camera():
 	_display_camera.near = CAMERA_NEAR
 	_display_camera.far = 100.0
 	_display_camera.position = Vector3(0, 0, 0)
-	_display_camera.cull_mask = 2  # Only render layer 2 (display quad)
+	_display_camera.cull_mask = 1 << (display_layer - 1)  # Only render display layer
 	add_child(_display_camera)
 
 
@@ -217,7 +221,7 @@ func _init_quad():
 	_quad_object = MeshInstance3D.new()
 	_quad_object.name = "DisplayQuad"
 	_quad_object.mesh = quad_mesh
-	_quad_object.layers = 2  # Layer 2
+	_quad_object.layers = display_layer  # Only visible to display camera
 	_quad_object.position = Vector3(0, 0, -1)  # In front of camera (camera looks toward -Z)
 	_quad_object.rotation = Vector3(0, 0, 0)
 	
