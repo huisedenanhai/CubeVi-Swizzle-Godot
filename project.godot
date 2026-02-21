@@ -37,3 +37,4 @@ enabled=PackedStringArray("res://addons/cube_vi_swizzle_editor/plugin.cfg")
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+renderer/rendering_method="mobile"

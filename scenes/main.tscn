@@ -10,8 +10,9 @@
 sky_material = SubResource("PhysicalSkyMaterial_o5qli")
 
 [sub_resource type="Environment" id="Environment_sugp2"]
-background_mode = 2
 sky = SubResource("Sky_0wfyh")
+ambient_light_source = 2
+ambient_light_color = Color(0.61328125, 0.61328125, 0.61328125, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_0wfyh"]
 
