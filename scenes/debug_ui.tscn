@@ -10,12 +10,12 @@ anchors_preset = 0
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 210.0
-offset_bottom = 160.0
+offset_bottom = 180.0
 
 [node name="MarginContainer" type="MarginContainer" parent="Panel"]
 layout_mode = 2
 offset_right = 200.0
-offset_bottom = 150.0
+offset_bottom = 170.0
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
@@ -35,4 +35,8 @@ Cameras: 40
 Grid: 8x5
 Focal: 10.00
 Atlas: 4320x4800"
+
+[node name="FPSLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "FPS: 60"
 vertical_alignment = 1

@@ -7,6 +7,7 @@ extends CanvasLayer
 @onready var panel: PanelContainer = $Panel
 @onready var toggle_button: CheckButton = $Panel/MarginContainer/VBoxContainer/ToggleButton
 @onready var info_label: Label = $Panel/MarginContainer/VBoxContainer/InfoLabel
+@onready var fps_label: Label = $Panel/MarginContainer/VBoxContainer/FPSLabel
 
 var camera_manager: BatchCameraManager
 var show_atlas: bool = false
@@ -85,6 +86,8 @@ Atlas: %s""" % [
 		info.focal_plane,
 		info.atlas_size
 	]
+	
+	fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 	
 	toggle_button.text = "Show Atlas" if not show_atlas else "Show Interleaved"
 
