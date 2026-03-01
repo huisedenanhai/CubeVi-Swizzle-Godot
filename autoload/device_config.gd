@@ -70,7 +70,7 @@ func load_device_config() -> void:
 			device_params["x0"] = inner_config["deviation"]
 	
 	SwizzleLogger.log_important("Loaded device calibration from config file")
-
+	SwizzleLogger.log_info(str(config_json.data))
 
 func _get_config_path() -> String:
 	# OpenStageAI config location - platform specific

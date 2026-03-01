@@ -193,7 +193,7 @@ func _init_atlas():
 	# Create SubViewportContainer for each camera viewport in the atlas
 	for i in range(_device.viewnum):
 		var n_i: int = i
-		var m: int = _device.imgs_count_y - int(float(n_i) / float(_device.imgs_count_x)) - 1
+		var m: int = int(float(n_i) / float(_device.imgs_count_x))
 		var n: int = n_i % _device.imgs_count_x
 		
 		var viewport_container := SubViewportContainer.new()
@@ -250,7 +250,6 @@ func _init_quad():
 	_quad_material.set_shader_parameter("_ImgsCountX", float(_device.imgs_count_x))
 	_quad_material.set_shader_parameter("_ImgsCountY", float(_device.imgs_count_y))
 	_quad_material.set_shader_parameter("_ImgsCountAll", float(_device.viewnum))
-	_quad_material.set_shader_parameter("_Gamma", 1.0)
 	_quad_material.set_shader_parameter("_OutputSizeX", _device.output_size_X)
 	_quad_material.set_shader_parameter("_OutputSizeY", _device.output_size_Y)
 	

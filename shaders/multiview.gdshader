@@ -12,7 +12,6 @@ uniform float _X0 = 3.59;
 uniform float _ImgsCountX = 8.0;
 uniform float _ImgsCountY = 5.0;
 uniform float _ImgsCountAll = 40.0;
-uniform float _Gamma = 1.0;
 uniform float _OutputSizeX = 1440.0;
 uniform float _OutputSizeY = 2560.0;
 uniform bool _ShowAtlas = false;
@@ -20,19 +19,20 @@ uniform bool _ShowAtlas = false;
 // Calculate lenticular lens choice
 float get_choice_float(vec2 pos, float bias) {
     float x = pos.x * _OutputSizeX + 0.5;
-    float y = (1.0 - pos.y) * _OutputSizeY + 0.5;
+    // float y = (1.0 - pos.y) * _OutputSizeY + 0.5;
+	// Tested on metal, no need to flip y here...
+    float y = pos.y * _OutputSizeY + 0.5;
     float x1 = (x + y * _Slope) * 3.0 + bias;
-    float x_local = mod(x1 + _X0, _Interval);
-    return x_local / _Interval;
+    return fract((x1 + _X0) / _Interval);
 }
 
 // Map choice to viewport UV coordinates
 vec2 get_uv_from_choice(vec2 pos, float choice_float) {
     float choice = floor(choice_float * _ImgsCountAll);
     
-    // Calculate grid position (inverted Y to match atlas layout)
-    float grid_x = _ImgsCountX - mod(choice, _ImgsCountX) - 1.0;
-    float grid_y = _ImgsCountY - floor(choice / _ImgsCountX) - 1.0;
+    // Calculate grid position
+    float grid_x = mod(choice, _ImgsCountX);
+    float grid_y = floor(choice / _ImgsCountX);
     
     // Convert to UV coordinates within the atlas
     vec2 cell_uv = pos;
@@ -64,11 +64,7 @@ void fragment() {
         vec4 color = get_color(uv, 0.0);
         color.g = get_color(uv, 1.0).g;
         color.b = get_color(uv, 2.0).b;
-        
-        // Apply gamma correction
-        color.rgb = pow(color.rgb, vec3(1.0 / _Gamma));
-        
         ALBEDO = color.rgb;
-        ALPHA = color.a;
+        ALPHA = 1.0;
     }
 }
