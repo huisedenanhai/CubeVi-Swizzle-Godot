@@ -1,5 +1,4 @@
-shader_type spatial;
-render_mode unshaded, cull_disabled;
+shader_type canvas_item;
 
 // MultiView Interlacing Shader
 // Converts 40-camera grid texture into light field output
@@ -57,14 +56,11 @@ void fragment() {
     
     if (_ShowAtlas) {
         // Debug mode: show raw atlas texture
-        ALBEDO = texture(_MainTex, uv).rgb;
-        ALPHA = 1.0;
+        COLOR = texture(_MainTex, uv);
     } else {
         // Normal mode: sample RGB from adjacent views for lenticular interlacing
-        vec4 color = get_color(uv, 0.0);
-        color.g = get_color(uv, 1.0).g;
-        color.b = get_color(uv, 2.0).b;
-        ALBEDO = color.rgb;
-        ALPHA = 1.0;
+        COLOR = get_color(uv, 0.0);
+        COLOR.g = get_color(uv, 1.0).g;
+        COLOR.b = get_color(uv, 2.0).b;
     }
 }
