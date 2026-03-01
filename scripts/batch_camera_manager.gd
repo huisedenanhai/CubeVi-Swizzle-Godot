@@ -45,6 +45,7 @@ var _quad_material: ShaderMaterial
 
 # Window display
 var _target_screen_index: int = 0
+var _enter_full_screen_disable_process: bool = false
 
 
 func _ready():
@@ -76,6 +77,8 @@ func _ready():
 
 
 func _process(_delta):
+	if _enter_full_screen_disable_process:
+		return
 	_update_target()
 	if Engine.is_editor_hint():
 		# In editor, just update gizmo when transforms change
@@ -135,7 +138,7 @@ func _setup_display():
 	if not found_display:
 		SwizzleLogger.log_warning("Companion 01 display (1440x2560) not found, using primary display")
 		_target_screen_index = DisplayServer.SCREEN_PRIMARY
-	
+
 	# Move window to target display
 	var target_pos := DisplayServer.screen_get_position(_target_screen_index)
 	DisplayServer.window_set_position(target_pos, 0)
@@ -143,6 +146,13 @@ func _setup_display():
 	# Set window size to output resolution
 	DisplayServer.window_set_size(Vector2i(int(_device.output_size_X), int(_device.output_size_Y)), 0)
 
+	if found_display:
+		# process is called when enter full screen. Variables are not init here. Disable process manually
+		_enter_full_screen_disable_process = true
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN, 0)
+		_enter_full_screen_disable_process = false
+		SwizzleLogger.log_info("Entered fullscreen mode on Companion 01 display")
+	
 
 func _init_camera(i: int, container: SubViewportContainer):
 	var viewport := SubViewport.new()
