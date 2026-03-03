@@ -1,3 +1,9 @@
+<div align="center">
+
+[English](./README.md) | [中文](./README_CN.md)
+
+</div>
+
 # CubeVi Swizzle Godot
 
 Godot support for light field display [Companion 01](https://www.openstageai.com/companion1). Ported from [official Unity SDK](https://github.com/CubeVi/CubeVi-Swizzle-Unity).
