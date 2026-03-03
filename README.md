@@ -2,9 +2,11 @@
 
 Godot support for light field display [Companion 01](https://www.openstageai.com/companion1). Ported from [official Unity SDK](https://github.com/CubeVi/CubeVi-Swizzle-Unity).
 
+Currently tested on macOS/Linux(Wayland). After wiring the display with HDMI cable, following the platform specific setup.
+
 ## Platform
 
-Currently only tested on macOS. After wiring the display with HDMI cable, following the setup:
+### macOS
 
 1. System Setting -> Displays. Set resolution to 720x1280 
 
@@ -23,3 +25,9 @@ The calibration result is located at `%APPDATA%\OpenstageAI\deviceConfig.json`. 
 You need to manually disable embeded window in editor.
 
 Hit play button. 3D content with parallex effect will show up on the display.
+
+### Linux (Wayland)
+
+1. Copy device calibration info from your Windows machine to `~/.config/OpenstageAI/deviceConfig.json`
+
+2. Open the project with Godot
